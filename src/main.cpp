@@ -162,16 +162,16 @@ int main()
     unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_nor_gl_4k.png").c_str());
     unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_disp_4k.png").c_str());
 
-    glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+    glm::vec3 lightPos(2.5f, 10.0f, 2.5f);
 
 
     // lights
     // ------
     glm::vec3 lightPositions[] = {
-        glm::vec3(-5.0f,  5.0f, 100.0f),
+        glm::vec3(20.0f,  20.0f, 20.f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec3(300.0f, 300.0f, 300.0f),
     };
 
     //glm::vec3 lightPositions[] = {
@@ -557,7 +557,7 @@ int main()
         glm::mat4 parallaxModel = glm::mat4(1.0f);
         parallaxModel = glm::rotate(parallaxModel, glm::radians(-90.f), glm::normalize(glm::vec3(1.0, 0.0, 0))); // rotate the quad to show parallax mapping from multiple directions
         parallaxModel = glm::scale(parallaxModel, glm::vec3(10));
-        parallaxModel = glm::translate(parallaxModel, glm::vec3(0,0,0.f));
+        parallaxModel = glm::translate(parallaxModel, glm::vec3(0,0,-0.1f));
         parallaxShader.setMat4("model", parallaxModel);
         parallaxShader.setVec3("viewPos", camera.Position);
         parallaxShader.setVec3("lightPos", lightPositions[0]);

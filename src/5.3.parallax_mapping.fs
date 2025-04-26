@@ -19,7 +19,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
     // number of depth layers
     const float minLayers = 8;
-    const float maxLayers = 64;
+    const float maxLayers = 128;
     float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
     // calculate the size of each layer
     float layerDepth = 1.0 / numLayers;
@@ -74,7 +74,7 @@ void main()
     // get diffuse color
     vec3 color = texture(diffuseMap, texCoords).rgb;
     // ambient TODO make scalar a variable
-    vec3 ambient = 2 * color;
+    vec3 ambient = 0.5 * color;
     // diffuse
     vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
     float diff = max(dot(lightDir, normal), 0.0);
