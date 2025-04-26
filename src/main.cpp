@@ -21,13 +21,16 @@ unsigned int loadTexture(const char* path);
 void renderSphere();
 void renderCube();
 void renderQuad();
+void renderQuadParallax();
 
 // settings
 const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
+const float PI = 3.14159265359f;
+
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 bool firstMouse = true;
@@ -35,6 +38,10 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+float heightScale = 0.1f;
+
+
 
 int main()
 {
@@ -91,6 +98,8 @@ int main()
     Shader prefilterShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.cubemap.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.prefilter.fs");
     Shader brdfShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.brdf.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.brdf.fs");
     Shader backgroundShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.background.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.background.fs");
+    Shader parallaxShader("C://Users//Nicky//Desktop//GPRO_Project//src//5.3.parallax_mapping.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//5.3.parallax_mapping.fs");
+
 
     pbrShader.use();
     pbrShader.setInt("irradianceMap", 0);
@@ -101,6 +110,11 @@ int main()
     pbrShader.setInt("metallicMap", 5);
     pbrShader.setInt("roughnessMap", 6);
     pbrShader.setInt("aoMap", 7);
+
+    parallaxShader.use();
+    parallaxShader.setInt("diffuseMap", 0);
+    parallaxShader.setInt("normalMap", 1);
+    parallaxShader.setInt("depthMap", 2);
 
     backgroundShader.use();
     backgroundShader.setInt("environmentMap", 0);
@@ -142,20 +156,36 @@ int main()
     unsigned int wallRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/roughness.png").c_str());
     unsigned int wallAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/ao.png").c_str());
 
+
+    // PARALLAX
+    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_diff_4k.png").c_str());
+    unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_nor_gl_4k.png").c_str());
+    unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_disp_4k.png").c_str());
+
+    glm::vec3 lightPos(0.5f, 1.0f, 0.3f);
+
+
     // lights
     // ------
     glm::vec3 lightPositions[] = {
-        glm::vec3(-10.0f,  10.0f, 10.0f),
-        glm::vec3(10.0f,  10.0f, 10.0f),
-        glm::vec3(-10.0f, -10.0f, 10.0f),
-        glm::vec3(10.0f, -10.0f, 10.0f),
+        glm::vec3(-5.0f,  5.0f, 100.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f)
+        glm::vec3(0.0f, 0.0f, 0.0f),
     };
+
+    //glm::vec3 lightPositions[] = {
+    //glm::vec3(-10.0f,  10.0f, 10.0f),
+    //glm::vec3(10.0f,  10.0f, 10.0f),
+    //glm::vec3(-10.0f, -10.0f, 10.0f),
+    //glm::vec3(10.0f, -10.0f, 10.0f),
+    //};
+    //glm::vec3 lightColors[] = {
+    //    glm::vec3(300.0f, 300.0f, 300.0f),
+    //    glm::vec3(300.0f, 300.0f, 300.0f),
+    //    glm::vec3(300.0f, 300.0f, 300.0f),
+    //    glm::vec3(300.0f, 300.0f, 300.0f)
+    //};
 
     // pbr: setup framebuffer
     // ----------------------
@@ -173,7 +203,7 @@ int main()
     // ---------------------------------
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/spiaggia_di_mondello_4k.hdr").c_str(), &width, &height, &nrComponents, 0);
     unsigned int hdrTexture;
     if (data)
     {
@@ -517,6 +547,30 @@ int main()
             renderSphere();
         }
 
+        // configure view/projection matrices
+        glm::mat4 parallaxProjection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 parallaxView = camera.GetViewMatrix();
+        parallaxShader.use();
+        parallaxShader.setMat4("projection", parallaxProjection);
+        parallaxShader.setMat4("view", parallaxView);
+        // render parallax-mapped quad
+        glm::mat4 parallaxModel = glm::mat4(1.0f);
+        parallaxModel = glm::rotate(parallaxModel, glm::radians(-90.f), glm::normalize(glm::vec3(1.0, 0.0, 0))); // rotate the quad to show parallax mapping from multiple directions
+        parallaxModel = glm::scale(parallaxModel, glm::vec3(10));
+        parallaxModel = glm::translate(parallaxModel, glm::vec3(0,0,0.f));
+        parallaxShader.setMat4("model", parallaxModel);
+        parallaxShader.setVec3("viewPos", camera.Position);
+        parallaxShader.setVec3("lightPos", lightPositions[0]);
+        parallaxShader.setFloat("heightScale", heightScale); // adjust with Q and E keys
+        std::cout << heightScale << std::endl;
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, normalMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, heightMap);
+        renderQuadParallax();
+
         // render skybox (render as last to prevent overdraw)
         backgroundShader.use();
 
@@ -559,6 +613,21 @@ void processInput(GLFWwindow* window)
         camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    {
+        if (heightScale > 0.0f)
+            heightScale -= 0.00005f;
+        else
+            heightScale = 0.0f;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    {
+        if (heightScale < 1.0f)
+            heightScale += 0.00005f;
+        else
+            heightScale = 1.0f;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -622,7 +691,6 @@ void renderSphere()
 
         const unsigned int X_SEGMENTS = 64;
         const unsigned int Y_SEGMENTS = 64;
-        const float PI = 3.14159265359f;
         for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
         {
             for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
@@ -773,8 +841,101 @@ void renderCube()
     glBindVertexArray(0);
 }
 
-// renderQuad() renders a 1x1 XY quad in NDC
-// -----------------------------------------
+// renders a 1x1 quad in NDC with manually calculated tangent vectors
+// ------------------------------------------------------------------
+unsigned int quadParallaxVAO = 0;
+unsigned int quadParallaxVBO;
+void renderQuadParallax()
+{
+    if (quadParallaxVAO == 0)
+    {
+        // positions
+        glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
+        glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+        glm::vec3 pos3(1.0f, -1.0f, 0.0f);
+        glm::vec3 pos4(1.0f, 1.0f, 0.0f);
+        // texture coordinates
+        glm::vec2 uv1(0.0f, 1.0f);
+        glm::vec2 uv2(0.0f, 0.0f);
+        glm::vec2 uv3(1.0f, 0.0f);
+        glm::vec2 uv4(1.0f, 1.0f);
+        // normal vector
+        glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+        // calculate tangent/bitangent vectors of both triangles
+        glm::vec3 tangent1, bitangent1;
+        glm::vec3 tangent2, bitangent2;
+        // triangle 1
+        // ----------
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent1 = glm::normalize(tangent1);
+
+        bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent1 = glm::normalize(bitangent1);
+
+        // triangle 2
+        // ----------
+        edge1 = pos3 - pos1;
+        edge2 = pos4 - pos1;
+        deltaUV1 = uv3 - uv1;
+        deltaUV2 = uv4 - uv1;
+
+        f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent2 = glm::normalize(tangent2);
+
+
+        bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+        bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+        bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+        bitangent2 = glm::normalize(bitangent2);
+
+
+        float quadVertices[] = {
+            // positions            // normal         // texcoords  // tangent                          // bitangent
+            pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+            pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+            pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+            pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+        };
+        // configure plane VAO
+        glGenVertexArrays(1, &quadParallaxVAO);
+        glGenBuffers(1, &quadParallaxVBO);
+        glBindVertexArray(quadParallaxVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, quadParallaxVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(6 * sizeof(float)));
+        glEnableVertexAttribArray(3);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(8 * sizeof(float)));
+        glEnableVertexAttribArray(4);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 14 * sizeof(float), (void*)(11 * sizeof(float)));
+    }
+    glBindVertexArray(quadParallaxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
 unsigned int quadVAO = 0;
 unsigned int quadVBO;
 void renderQuad()
@@ -803,6 +964,7 @@ void renderQuad()
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
 }
+
 
 // utility function for loading a 2D texture from file
 // ---------------------------------------------------
