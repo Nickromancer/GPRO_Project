@@ -92,13 +92,14 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader pbrShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.pbr.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.pbr.fs");
-    Shader equirectangularToCubemapShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.cubemap.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.equirectangular_to_cubemap.fs");
-    Shader irradianceShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.cubemap.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.irradiance_convolution.fs");
-    Shader prefilterShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.cubemap.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.prefilter.fs");
-    Shader brdfShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.brdf.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.brdf.fs");
-    Shader backgroundShader("C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.background.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//2.2.2.background.fs");
-    Shader parallaxShader("C://Users//Nicky//Desktop//GPRO_Project//src//5.3.parallax_mapping.vs", "C://Users//Nicky//Desktop//GPRO_Project//src//5.3.parallax_mapping.fs");
+
+    Shader pbrShader("../src/2.2.2.pbr.vs", "../src/2.2.2.pbr.fs");
+    Shader equirectangularToCubemapShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.equirectangular_to_cubemap.fs");
+    Shader irradianceShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.irradiance_convolution.fs");
+    Shader prefilterShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.prefilter.fs");
+    Shader brdfShader("../src/2.2.2.brdf.vs", "../src/2.2.2.brdf.fs");
+    Shader backgroundShader("../src/2.2.2.background.vs", "../src/2.2.2.background.fs");
+    Shader parallaxShader("../src/5.3.parallax_mapping.vs", "../src/5.3.parallax_mapping.fs");
 
 
     pbrShader.use();
@@ -326,7 +327,7 @@ int main()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear 
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
@@ -530,7 +531,7 @@ int main()
         renderSphere();
 
         // render light source (simply re-render sphere at light positions)
-        // this looks a bit off as we use the same shader, but it'll make their positions obvious and 
+        // this looks a bit off as we use the same shader, but it'll make their positions obvious and
         // keeps the codeprint small.
         for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
         {
@@ -634,7 +635,7 @@ void processInput(GLFWwindow* window)
 // ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and 
+    // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
@@ -779,7 +780,7 @@ void renderCube()
             // back face
             -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
              1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+             1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right
              1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
             -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
             -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
@@ -800,10 +801,10 @@ void renderCube()
             // right face
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
              1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+             1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right
              1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
              1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+             1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left
              // bottom face
              -1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
               1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
@@ -814,10 +815,10 @@ void renderCube()
              // top face
              -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
               1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-              1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+              1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right
               1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
              -1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-             -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+             -1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left
         };
         glGenVertexArrays(1, &cubeVAO);
         glGenBuffers(1, &cubeVBO);
