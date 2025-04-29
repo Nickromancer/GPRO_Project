@@ -39,7 +39,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-float heightScale = 0.1f;
+float heightScale = 0.03f;
 
 
 
@@ -129,35 +129,6 @@ int main()
     unsigned int ironRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/roughness.png").c_str());
     unsigned int ironAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/ao.png").c_str());
 
-    // gold
-    unsigned int goldAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/albedo.png").c_str());
-    unsigned int goldNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/normal.png").c_str());
-    unsigned int goldMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/metallic.png").c_str());
-    unsigned int goldRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/roughness.png").c_str());
-    unsigned int goldAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/ao.png").c_str());
-
-    // grass
-    unsigned int grassAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/albedo.png").c_str());
-    unsigned int grassNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/normal.png").c_str());
-    unsigned int grassMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/metallic.png").c_str());
-    unsigned int grassRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/roughness.png").c_str());
-    unsigned int grassAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/ao.png").c_str());
-
-    // plastic
-    unsigned int plasticAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/albedo.png").c_str());
-    unsigned int plasticNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/normal.png").c_str());
-    unsigned int plasticMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/metallic.png").c_str());
-    unsigned int plasticRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/roughness.png").c_str());
-    unsigned int plasticAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/ao.png").c_str());
-
-    // wall
-    unsigned int wallAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/albedo.png").c_str());
-    unsigned int wallNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/normal.png").c_str());
-    unsigned int wallMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/metallic.png").c_str());
-    unsigned int wallRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/roughness.png").c_str());
-    unsigned int wallAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/ao.png").c_str());
-
-
     // PARALLAX
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_diff_4k.png").c_str());
     unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_nor_gl_4k.png").c_str());
@@ -174,19 +145,6 @@ int main()
     glm::vec3 lightColors[] = {
         glm::vec3(300.0f, 300.0f, 300.0f),
     };
-
-    //glm::vec3 lightPositions[] = {
-    //glm::vec3(-10.0f,  10.0f, 10.0f),
-    //glm::vec3(10.0f,  10.0f, 10.0f),
-    //glm::vec3(-10.0f, -10.0f, 10.0f),
-    //glm::vec3(10.0f, -10.0f, 10.0f),
-    //};
-    //glm::vec3 lightColors[] = {
-    //    glm::vec3(300.0f, 300.0f, 300.0f),
-    //    glm::vec3(300.0f, 300.0f, 300.0f),
-    //    glm::vec3(300.0f, 300.0f, 300.0f),
-    //    glm::vec3(300.0f, 300.0f, 300.0f)
-    //};
 
     // pbr: setup framebuffer
     // ----------------------
@@ -454,78 +412,6 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-5.0, 0.0, 2.0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        renderSphere();
-
-        // gold
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, goldNormalMap);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, goldMetallicMap);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, goldAOMap);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        renderSphere();
-
-        // grass
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, grassAlbedoMap);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, grassNormalMap);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, grassMetallicMap);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, grassRoughnessMap);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, grassAOMap);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-1.0, 0.0, 2.0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        renderSphere();
-
-        // plastic
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, plasticAlbedoMap);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, plasticNormalMap);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, plasticMetallicMap);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, plasticRoughnessMap);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, plasticAOMap);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(1.0, 0.0, 2.0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        renderSphere();
-
-        // wall
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, wallAlbedoMap);
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, wallNormalMap);
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, wallMetallicMap);
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, wallRoughnessMap);
-        glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, wallAOMap);
-
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(3.0, 0.0, 2.0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         renderSphere();
