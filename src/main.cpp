@@ -101,6 +101,8 @@ int main()
     Shader backgroundShader("../src/2.2.2.background.vs", "../src/2.2.2.background.fs");
     Shader parallaxShader("../src/5.3.parallax_mapping.vs", "../src/5.3.parallax_mapping.fs");
 
+    Shader modelShader("../src/model.vs", "../src/model.fs");
+
 
     pbrShader.use();
     pbrShader.setInt("irradianceMap", 0);
@@ -363,6 +365,11 @@ int main()
     glfwGetFramebufferSize(window, &scrWidth, &scrHeight);
     glViewport(0, 0, scrWidth, scrHeight);
 
+
+    // Load Model
+    Model ourModel("C://Users//Nicky//Desktop//Graphics//GPRO_Project//resources//objects//Bone.obj");
+
+
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
@@ -410,11 +417,14 @@ int main()
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, ironAOMap);
 
+
+
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(-5.0, 0.0, 2.0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        renderSphere();
+        ourModel.Draw(pbrShader);
+        //renderSphere();
 
         // render light source (simply re-render sphere at light positions)
         // this looks a bit off as we use the same shader, but it'll make their positions obvious and
@@ -467,6 +477,7 @@ int main()
         //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
         //glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
         renderCube();
+
 
         // render BRDF map to screen
         //brdfShader.Use();
