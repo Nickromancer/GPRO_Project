@@ -1,9 +1,10 @@
 {
   "dependencies": [
+    "assimp",
     "glad",
     "glfw3",
     "glm",
     "stb",
-    "assimp"
+    "imgui"
   ]
 }

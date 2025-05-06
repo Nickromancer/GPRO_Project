@@ -12,6 +12,7 @@
 #include <model.h>
 
 #include <iostream>
+#include <imgui.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -93,13 +94,13 @@ int main()
     // build and compile shaders
     // -------------------------
 
-    Shader pbrShader("../src/2.2.2.pbr.vs", "../src/2.2.2.pbr.fs");
-    Shader equirectangularToCubemapShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.equirectangular_to_cubemap.fs");
-    Shader irradianceShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.irradiance_convolution.fs");
-    Shader prefilterShader("../src/2.2.2.cubemap.vs", "../src/2.2.2.prefilter.fs");
-    Shader brdfShader("../src/2.2.2.brdf.vs", "../src/2.2.2.brdf.fs");
-    Shader backgroundShader("../src/2.2.2.background.vs", "../src/2.2.2.background.fs");
-    Shader parallaxShader("../src/5.3.parallax_mapping.vs", "../src/5.3.parallax_mapping.fs");
+    Shader pbrShader("../src/pbr.vs", "../src/pbr.fs");
+    Shader equirectangularToCubemapShader("../src/cubemap.vs", "../src/equirectangular_to_cubemap.fs");
+    Shader irradianceShader("../src/cubemap.vs", "../src/irradiance_convolution.fs");
+    Shader prefilterShader("../src/cubemap.vs", "../src/prefilter.fs");
+    Shader brdfShader("../src/brdf.vs", "../src/brdf.fs");
+    Shader backgroundShader("../src/background.vs", "../src/background.fs");
+    Shader parallaxShader("../src/parallax_mapping.vs", "../src/parallax_mapping.fs");
 
     Shader modelShader("../src/model.vs", "../src/model.fs");
 
