@@ -6,11 +6,12 @@ find_package(glad CONFIG REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
+find_package(imgui CONFIG REQUIRED)
 
 
-add_executable(GPRO_Project "src/main.cpp")
+add_executable(GPRO_Project "src/main.cpp" "includes/imgui_impl_glfw.cpp" "includes/imgui_impl_glfw.h" "includes/imgui_impl_opengl3.cpp" "includes/imgui_impl_opengl3.h" "includes/imgui_impl_opengl3_loader.h")
 
-target_link_libraries(GPRO_Project PRIVATE glad::glad glfw glm::glm assimp::assimp)
+target_link_libraries(GPRO_Project PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 
 include_directories(${CMAKE_SOURCE_DIR}/includes)
 include_directories(${CMAKE_SOURCE_DIR}/build/vcpkg_installed/x64-windows/include/stb_image.h)
