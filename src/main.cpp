@@ -75,7 +75,7 @@ int main()
     glfwSetScrollCallback(window, scroll_callback);
 
     // tell GLFW to capture our mouse
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -100,7 +100,6 @@ int main()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-
     // build and compile shaders
     // -------------------------
 
@@ -399,9 +398,10 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
+        ImGui::SetNextWindowSize(ImVec2(400, 400));
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        ImGui::ShowDemoWindow();
+        //ImGui::ShowDemoWindow();
 
         // render
         // ------
@@ -478,7 +478,7 @@ int main()
         parallaxShader.setVec3("viewPos", camera.Position);
         parallaxShader.setVec3("lightPos", lightPositions[0]);
         parallaxShader.setFloat("heightScale", heightScale); // adjust with Q and E keys
-        std::cout << heightScale << std::endl;
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         glActiveTexture(GL_TEXTURE1);
@@ -506,7 +506,12 @@ int main()
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         ImGui::Begin("GUI Window");
-        ImGui::Text("Hello");
+        ImGui::Text("Parallax");
+        ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
+        ImGui::Text("Light Position");
+        ImGui::DragFloat("X", &lightPositions[0].x);
+        ImGui::DragFloat("Y", &lightPositions[0].y);
+        ImGui::DragFloat("Z", &lightPositions[0].z);
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -541,20 +546,7 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.ProcessKeyboard(RIGHT, deltaTime);
 
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-    {
-        if (heightScale > 0.0f)
-            heightScale -= 0.00005f;
-        else
-            heightScale = 0.0f;
-    }
-    else if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-    {
-        if (heightScale < 1.0f)
-            heightScale += 0.00005f;
-        else
-            heightScale = 1.0f;
-    }
+
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -571,23 +563,35 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 // -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-
-    if (firstMouse)
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        return;
     }
+    else
+    {
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE) {
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+            float xpos = static_cast<float>(xposIn);
+            float ypos = static_cast<float>(yposIn);
 
-    lastX = xpos;
-    lastY = ypos;
+            if (firstMouse)
+            {
+                lastX = xpos;
+                lastY = ypos;
+                firstMouse = false;
+            }
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+            float xoffset = xpos - lastX;
+            float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+            lastX = xpos;
+            lastY = ypos;
+
+            camera.ProcessMouseMovement(xoffset, yoffset);
+        }
+    }
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
