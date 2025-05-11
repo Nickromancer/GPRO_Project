@@ -33,7 +33,7 @@ const float PI = 3.14159265359f;
 
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 10.0f, 20.0f));
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 bool firstMouse = true;
@@ -43,6 +43,9 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 float heightScale = 0.03f;
+
+// chest position
+glm::vec3 position = glm::vec3(0, 0.55, 0);
 
 
 
@@ -100,6 +103,7 @@ int main()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
     // build and compile shaders
     // -------------------------
 
@@ -110,9 +114,6 @@ int main()
     Shader brdfShader("../src/brdf.vs", "../src/brdf.fs");
     Shader backgroundShader("../src/background.vs", "../src/background.fs");
     Shader parallaxShader("../src/parallax_mapping.vs", "../src/parallax_mapping.fs");
-
-    Shader modelShader("../src/model.vs", "../src/model.fs");
-
 
     pbrShader.use();
     pbrShader.setInt("irradianceMap", 0);
@@ -134,17 +135,17 @@ int main()
 
     // load PBR material textures
     // --------------------------
-    // rusted iron
-    unsigned int ironAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/albedo.png").c_str());
-    unsigned int ironNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/normal.png").c_str());
-    unsigned int ironMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/metallic.png").c_str());
-    unsigned int ironRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/roughness.png").c_str());
-    unsigned int ironAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/ao.png").c_str());
+    // Chest
+    unsigned int chestAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/albedo.png").c_str());
+    unsigned int chestNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/normal.png").c_str());
+    unsigned int chestMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/metallic.png").c_str());
+    unsigned int chestRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/roughness.png").c_str());
+    unsigned int chestAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/ao.png").c_str());
 
     // PARALLAX
-    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_diff_4k.png").c_str());
-    unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_nor_gl_4k.png").c_str());
-    unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_disp_4k.png").c_str());
+    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_diff_4k.png").c_str());
+    unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_nor_gl_4k.png").c_str());
+    unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_disp_4k.png").c_str());
 
     glm::vec3 lightPos(2.5f, 10.0f, 2.5f);
 
@@ -152,7 +153,7 @@ int main()
     // lights
     // ------
     glm::vec3 lightPositions[] = {
-        glm::vec3(20.0f,  20.0f, 20.f),
+        glm::vec3(0.0f,  2.0f, 0.f),
     };
     glm::vec3 lightColors[] = {
         glm::vec3(300.0f, 300.0f, 300.0f),
@@ -375,10 +376,8 @@ int main()
     glfwGetFramebufferSize(window, &scrWidth, &scrHeight);
     glViewport(0, 0, scrWidth, scrHeight);
 
-
     // Load Model
-    Model ourModel("C://Users//Nicky//Desktop//Graphics//GPRO_Project//resources//objects//Bone.obj");
-
+    Model ourModel("../resources/objects/Chest.obj");
 
     // render loop
     // -----------
@@ -424,22 +423,23 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
 
-        // rusted iron
+        // Chest
         glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, ironAlbedoMap);
+        glBindTexture(GL_TEXTURE_2D, chestAlbedoMap);
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, ironNormalMap);
+        glBindTexture(GL_TEXTURE_2D, chestNormalMap);
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, ironMetallicMap);
+        glBindTexture(GL_TEXTURE_2D, chestMetallicMap);
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, ironRoughnessMap);
+        glBindTexture(GL_TEXTURE_2D, chestRoughnessMap);
         glActiveTexture(GL_TEXTURE7);
-        glBindTexture(GL_TEXTURE_2D, ironAOMap);
+        glBindTexture(GL_TEXTURE_2D, chestAOMap);
 
 
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-5.0, 0.0, 2.0));
+        model = glm::scale(model, glm::vec3(2));
+        model = glm::translate(model, position);
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         ourModel.Draw(pbrShader);
@@ -509,9 +509,13 @@ int main()
         ImGui::Text("Parallax");
         ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
         ImGui::Text("Light Position");
-        ImGui::DragFloat("X", &lightPositions[0].x);
-        ImGui::DragFloat("Y", &lightPositions[0].y);
-        ImGui::DragFloat("Z", &lightPositions[0].z);
+        ImGui::SliderFloat("X Light", &lightPositions[0].x, -100, 100);
+        ImGui::SliderFloat("Y Light", &lightPositions[0].y, -100, 100);
+        ImGui::SliderFloat("Z Light", &lightPositions[0].z, -100, 100);
+        ImGui::Text("Chest Position");
+        ImGui::SliderFloat("X Chest", &position.x, -100, 100);
+        ImGui::SliderFloat("Y Chest", &position.y, -100, 100);
+        ImGui::SliderFloat("Z Chest", &position.z, -100, 100);
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
