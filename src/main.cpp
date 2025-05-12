@@ -377,7 +377,8 @@ int main()
     glViewport(0, 0, scrWidth, scrHeight);
 
     // Load Model
-    Model ourModel("../resources/objects/Chest.obj");
+    Model chestModel("../resources/objects/Chest.obj");
+    Model cupModel("../resources/objects/Cup.obj");
 
     // render loop
     // -----------
@@ -442,7 +443,7 @@ int main()
         model = glm::translate(model, position);
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        ourModel.Draw(pbrShader);
+        chestModel.Draw(pbrShader);
         //renderSphere();
 
         // render light source (simply re-render sphere at light positions)
@@ -460,7 +461,8 @@ int main()
             model = glm::scale(model, glm::vec3(0.5f));
             pbrShader.setMat4("model", model);
             pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-            renderSphere();
+            cupModel.Draw(pbrShader);
+            //renderSphere();
         }
 
         // configure view/projection matrices
