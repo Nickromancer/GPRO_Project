@@ -31,7 +31,6 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 const float PI = 3.14159265359f;
 
-
 // camera
 Camera camera(glm::vec3(0.0f, 10.0f, 20.0f));
 float lastX = 800.0f / 2.0;
@@ -48,11 +47,9 @@ float heightScale = 0.03f;
 glm::vec3 position = glm::vec3(0, 0.55, 0);
 
 
-
 int main()
 {
     // glfw: initialize and configure
-    // ------------------------------
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -64,7 +61,6 @@ int main()
 #endif
 
     // glfw window creation
-    // --------------------
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
     glfwMakeContextCurrent(window);
     if (window == NULL)
@@ -77,11 +73,10 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    // tell GLFW to capture our mouse
+    // tell glfw to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // glad: load all OpenGL function pointers
-    // ---------------------------------------
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -89,7 +84,6 @@ int main()
     }
 
     // configure global opengl state
-    // -----------------------------
     glEnable(GL_DEPTH_TEST);
     // set depth function to less than AND equal for skybox depth trick.
     glDepthFunc(GL_LEQUAL);
@@ -105,8 +99,6 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // build and compile shaders
-    // -------------------------
-
     Shader pbrShader("../src/pbr.vs", "../src/pbr.fs");
     Shader equirectangularToCubemapShader("../src/cubemap.vs", "../src/equirectangular_to_cubemap.fs");
     Shader irradianceShader("../src/cubemap.vs", "../src/irradiance_convolution.fs");
@@ -142,16 +134,19 @@ int main()
     unsigned int chestRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/roughness.png").c_str());
     unsigned int chestAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/ao.png").c_str());
 
-    // PARALLAX
+    // Cup
+    unsigned int cupAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/albedo.png").c_str());
+    unsigned int cupNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/normal.png").c_str());
+    unsigned int cupMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/metallic.png").c_str());
+    unsigned int cupRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/roughness.png").c_str());
+    unsigned int cupAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/ao.png").c_str());
+
+    // Parallax
     unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_diff_4k.png").c_str());
     unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_nor_gl_4k.png").c_str());
     unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_disp_4k.png").c_str());
 
-    glm::vec3 lightPos(2.5f, 10.0f, 2.5f);
-
-
-    // lights
-    // ------
+    // lights (Can add more)
     glm::vec3 lightPositions[] = {
         glm::vec3(0.0f,  2.0f, 0.f),
     };
@@ -159,8 +154,7 @@ int main()
         glm::vec3(300.0f, 300.0f, 300.0f),
     };
 
-    // pbr: setup framebuffer
-    // ----------------------
+    // setup framebuffer
     unsigned int captureFBO;
     unsigned int captureRBO;
     glGenFramebuffers(1, &captureFBO);
@@ -171,8 +165,7 @@ int main()
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 512, 512);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
-    // pbr: load the HDR environment map
-    // ---------------------------------
+    // load the HDR environment map
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
     float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/spiaggia_di_mondello_4k.hdr").c_str(), &width, &height, &nrComponents, 0);
@@ -181,7 +174,7 @@ int main()
     {
         glGenTextures(1, &hdrTexture);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -195,8 +188,7 @@ int main()
         std::cout << "Failed to load HDR image." << std::endl;
     }
 
-    // pbr: setup cubemap to render to and attach to framebuffer
-    // ---------------------------------------------------------
+    // setup cubemap to render and attach to framebuffer
     unsigned int envCubemap;
     glGenTextures(1, &envCubemap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -210,8 +202,7 @@ int main()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // enable pre-filter mipmap sampling (combatting visible dots artifact)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // pbr: set up projection and view matrices for capturing data onto the 6 cubemap face directions
-    // ----------------------------------------------------------------------------------------------
+    // set up projection and view matrices for capturing data onto the 6 cubemap face directions
     glm::mat4 captureProjection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[] =
     {
@@ -223,15 +214,14 @@ int main()
         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
     };
 
-    // pbr: convert HDR equirectangular environment map to cubemap equivalent
-    // ----------------------------------------------------------------------
+    // convert HDR equirectangular environment map to cubemap equivalent
     equirectangularToCubemapShader.use();
     equirectangularToCubemapShader.setInt("equirectangularMap", 0);
     equirectangularToCubemapShader.setMat4("projection", captureProjection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
-    glViewport(0, 0, 512, 512); // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, 512, 512);
     glBindFramebuffer(GL_FRAMEBUFFER, captureFBO);
     for (unsigned int i = 0; i < 6; ++i)
     {
@@ -243,12 +233,11 @@ int main()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // then let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
+    // let OpenGL generate mipmaps from first mip face (combatting visible dots artifact)
     glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-    // pbr: create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
-    // --------------------------------------------------------------------------------
+    // create an irradiance cubemap, and re-scale capture FBO to irradiance scale.
     unsigned int irradianceMap;
     glGenTextures(1, &irradianceMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap);
@@ -266,8 +255,7 @@ int main()
     glBindRenderbuffer(GL_RENDERBUFFER, captureRBO);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
 
-    // pbr: solve diffuse integral by convolution to create an irradiance (cube)map.
-    // -----------------------------------------------------------------------------
+    // solve diffuse integral by convolution to create an irradiance (cube)map.
     irradianceShader.use();
     irradianceShader.setInt("environmentMap", 0);
     irradianceShader.setMat4("projection", captureProjection);
@@ -286,8 +274,7 @@ int main()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // pbr: create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
-    // --------------------------------------------------------------------------------
+    // create a pre-filter cubemap, and re-scale capture FBO to pre-filter scale.
     unsigned int prefilterMap;
     glGenTextures(1, &prefilterMap);
     glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap);
@@ -298,13 +285,13 @@ int main()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // be sure to set minification filter to mip_linear
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     // generate mipmaps for the cubemap so OpenGL automatically allocates the required memory.
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-    // pbr: run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
-    // ----------------------------------------------------------------------------------------------------
+    // run a quasi monte-carlo simulation on the environment lighting to create a prefilter (cube)map.
     prefilterShader.use();
     prefilterShader.setInt("environmentMap", 0);
     prefilterShader.setMat4("projection", captureProjection);
@@ -335,8 +322,7 @@ int main()
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    // pbr: generate a 2D LUT from the BRDF equations used.
-    // ----------------------------------------------------
+    // generate a 2D LUT from the BRDF equations used.
     unsigned int brdfLUTTexture;
     glGenTextures(1, &brdfLUTTexture);
 
@@ -364,7 +350,6 @@ int main()
 
 
     // initialize static shader uniforms before rendering
-    // --------------------------------------------------
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     pbrShader.use();
     pbrShader.setMat4("projection", projection);
@@ -376,40 +361,32 @@ int main()
     glfwGetFramebufferSize(window, &scrWidth, &scrHeight);
     glViewport(0, 0, scrWidth, scrHeight);
 
-    // Load Model
+    // Load Models
     Model chestModel("../resources/objects/Chest.obj");
-    Model cupModel("../resources/objects/Cup.obj");
+    Model cupModel("../resources/objects/coffee.obj");
 
     // render loop
-    // -----------
     while (!glfwWindowShouldClose(window))
     {
         // per-frame time logic
-        // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
         // input
-        // -----
         processInput(window);
 
-
+        // gui setup
         ImGui_ImplGlfw_NewFrame();
         ImGui_ImplOpenGL3_NewFrame();
         ImGui::NewFrame();
         ImGui::SetNextWindowSize(ImVec2(400, 400));
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        //ImGui::ShowDemoWindow();
-
         // render
-        // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render scene, supplying the convoluted irradiance map to the final shader.
-        // ------------------------------------------------------------------------------------------
         pbrShader.use();
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -436,19 +413,27 @@ int main()
         glActiveTexture(GL_TEXTURE7);
         glBindTexture(GL_TEXTURE_2D, chestAOMap);
 
-
-
         model = glm::mat4(1.0f);
         model = glm::scale(model, glm::vec3(2));
         model = glm::translate(model, position);
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         chestModel.Draw(pbrShader);
-        //renderSphere();
 
-        // render light source (simply re-render sphere at light positions)
-        // this looks a bit off as we use the same shader, but it'll make their positions obvious and
-        // keeps the codeprint small.
+        // Cup
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, cupAlbedoMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, cupNormalMap);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, cupMetallicMap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, cupRoughnessMap);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, cupAOMap);
+
+
+        // render light source
         for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
         {
             glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
@@ -462,15 +447,12 @@ int main()
             pbrShader.setMat4("model", model);
             pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
             cupModel.Draw(pbrShader);
-            //renderSphere();
         }
 
-        // configure view/projection matrices
-        glm::mat4 parallaxProjection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 parallaxView = camera.GetViewMatrix();
         parallaxShader.use();
-        parallaxShader.setMat4("projection", parallaxProjection);
-        parallaxShader.setMat4("view", parallaxView);
+        parallaxShader.setMat4("projection", projection);
+        parallaxShader.setMat4("view", view);
+
         // render parallax-mapped quad
         glm::mat4 parallaxModel = glm::mat4(1.0f);
         parallaxModel = glm::rotate(parallaxModel, glm::radians(-90.f), glm::normalize(glm::vec3(1.0, 0.0, 0))); // rotate the quad to show parallax mapping from multiple directions
@@ -479,7 +461,7 @@ int main()
         parallaxShader.setMat4("model", parallaxModel);
         parallaxShader.setVec3("viewPos", camera.Position);
         parallaxShader.setVec3("lightPos", lightPositions[0]);
-        parallaxShader.setFloat("heightScale", heightScale); // adjust with Q and E keys
+        parallaxShader.setFloat("heightScale", heightScale);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -489,13 +471,13 @@ int main()
         glBindTexture(GL_TEXTURE_2D, heightMap);
         renderQuadParallax();
 
-        // render skybox (render as last to prevent overdraw)
+        // render skybox
         backgroundShader.use();
 
         backgroundShader.setMat4("view", view);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+        //glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
         //glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
         renderCube();
 
@@ -505,8 +487,7 @@ int main()
         //renderQuad();
 
 
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
+
         ImGui::Begin("GUI Window");
         ImGui::Text("Parallax");
         ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
@@ -522,6 +503,7 @@ int main()
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+        // swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -530,14 +512,12 @@ int main()
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
+    // terminate, clearing all previously allocated GLFW resources.
     glfwTerminate();
     return 0;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
 void processInput(GLFWwindow* window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -556,17 +536,13 @@ void processInput(GLFWwindow* window)
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
 
 
 // glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
@@ -601,14 +577,12 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 
 // renders (and builds at first invocation) a sphere
-// -------------------------------------------------
 unsigned int sphereVAO = 0;
 GLsizei indexCount;
 void renderSphere()
@@ -704,7 +678,6 @@ void renderSphere()
 }
 
 // renderCube() renders a 1x1 3D cube in NDC.
-// -------------------------------------------------
 unsigned int cubeVAO = 0;
 unsigned int cubeVBO = 0;
 void renderCube()
@@ -779,7 +752,6 @@ void renderCube()
 }
 
 // renders a 1x1 quad in NDC with manually calculated tangent vectors
-// ------------------------------------------------------------------
 unsigned int quadParallaxVAO = 0;
 unsigned int quadParallaxVBO;
 void renderQuadParallax()
@@ -904,7 +876,6 @@ void renderQuad()
 
 
 // utility function for loading a 2D texture from file
-// ---------------------------------------------------
 unsigned int loadTexture(char const* path)
 {
     unsigned int textureID;
