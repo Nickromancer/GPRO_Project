@@ -9,7 +9,7 @@ find_package(glm CONFIG REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
 
-add_executable(GPRO_Project "src/main.cpp" "includes/imgui_impl_glfw.cpp" "includes/imgui_impl_glfw.h" "includes/imgui_impl_opengl3.cpp" "includes/imgui_impl_opengl3.h" "includes/imgui_impl_opengl3_loader.h" "src/Application.cpp")
+add_executable(GPRO_Project "src/main.cpp" "includes/imgui_impl_glfw.cpp" "includes/imgui_impl_glfw.h" "includes/imgui_impl_opengl3.cpp" "includes/imgui_impl_opengl3.h" "includes/imgui_impl_opengl3_loader.h" )
 
 target_link_libraries(GPRO_Project PRIVATE glad::glad glfw glm::glm assimp::assimp imgui::imgui)
 

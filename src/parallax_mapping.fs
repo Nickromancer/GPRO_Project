@@ -14,6 +14,7 @@ uniform sampler2D normalMap;
 uniform sampler2D depthMap;
 
 uniform float heightScale;
+uniform float gamma;
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
@@ -85,5 +86,11 @@ void main()
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
     vec3 specular = vec3(0.2) * spec;
-    FragColor = vec4(ambient + diffuse + specular, 1.0);
+    vec4 result = vec4(ambient + diffuse + specular, 1.0);
+    
+    vec4 gammaCorrected = pow(result, vec4(1.0 / gamma));
+
+    FragColor = gammaCorrected;
+
+
 }

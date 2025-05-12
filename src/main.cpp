@@ -46,6 +46,9 @@ float heightScale = 0.03f;
 // chest position
 glm::vec3 position = glm::vec3(0, 0.55, 0);
 
+// gamma
+float gamma = 1.f;
+
 
 int main()
 {
@@ -126,7 +129,7 @@ int main()
     backgroundShader.setInt("environmentMap", 0);
 
     // load PBR material textures
-    // --------------------------
+
     // Chest
     unsigned int chestAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/albedo.png").c_str());
     unsigned int chestNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/chest/normal.png").c_str());
@@ -392,6 +395,8 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         pbrShader.setMat4("view", view);
         pbrShader.setVec3("camPos", camera.Position);
+        pbrShader.setFloat("gamma", gamma);
+
 
         // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
@@ -452,6 +457,7 @@ int main()
         parallaxShader.use();
         parallaxShader.setMat4("projection", projection);
         parallaxShader.setMat4("view", view);
+        parallaxShader.setFloat("gamma", gamma);
 
         // render parallax-mapped quad
         glm::mat4 parallaxModel = glm::mat4(1.0f);
@@ -474,23 +480,22 @@ int main()
         // render skybox
         backgroundShader.use();
 
+        backgroundShader.setFloat("gamma", gamma);
+
         backgroundShader.setMat4("view", view);
         glActiveTexture(GL_TEXTURE0);
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
         //glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
         renderCube();
-
-
-        // render BRDF map to screen
-        //brdfShader.Use();
-        //renderQuad();
 
 
 
         ImGui::Begin("GUI Window");
         ImGui::Text("Parallax");
         ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
+        ImGui::Text("Gamma");
+        ImGui::SliderFloat("Gamma Value", &gamma, 0, 10);
         ImGui::Text("Light Position");
         ImGui::SliderFloat("X Light", &lightPositions[0].x, -100, 100);
         ImGui::SliderFloat("Y Light", &lightPositions[0].y, -100, 100);
