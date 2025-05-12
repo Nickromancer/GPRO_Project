@@ -506,13 +506,13 @@ int main()
         ImGui::Text("Light Color");
         ImGui::ColorEdit3("Color", &lightColors[0].x);
         ImGui::Text("Light Position");
-        ImGui::SliderFloat("X Light", &lightPositions[0].x, -100, 100);
-        ImGui::SliderFloat("Y Light", &lightPositions[0].y, -100, 100);
-        ImGui::SliderFloat("Z Light", &lightPositions[0].z, -100, 100);
+        ImGui::SliderFloat("X Light", &lightPositions[0].x, -25, 25);
+        ImGui::SliderFloat("Y Light", &lightPositions[0].y, -25, 25);
+        ImGui::SliderFloat("Z Light", &lightPositions[0].z, -25, 25);
         ImGui::Text("Chest Position");
-        ImGui::SliderFloat("X Chest", &position.x, -100, 100);
-        ImGui::SliderFloat("Y Chest", &position.y, -100, 100);
-        ImGui::SliderFloat("Z Chest", &position.z, -100, 100);
+        ImGui::SliderFloat("X Chest", &position.x, -25, 25);
+        ImGui::SliderFloat("Y Chest", &position.y, -25, 25);
+        ImGui::SliderFloat("Z Chest", &position.z, -25, 25);
         ImGui::Text("Maps");
 
         char* items[] = { "envCubemap", "irradianceMap", "prefilterMap" };
