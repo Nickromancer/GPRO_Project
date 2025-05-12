@@ -15,6 +15,7 @@ uniform sampler2D depthMap;
 
 uniform float heightScale;
 uniform float gamma;
+uniform vec3 lightColor;
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 
@@ -74,18 +75,18 @@ void main()
    
     // get diffuse color
     vec3 color = texture(diffuseMap, texCoords).rgb;
-    // ambient TODO make scalar a variable
+    // ambient
     vec3 ambient = 0.5 * color;
     // diffuse
     vec3 lightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);
     float diff = max(dot(lightDir, normal), 0.0);
-    vec3 diffuse = diff * color;
+    vec3 diffuse = diff * color * lightColor;
     // specular    
     vec3 reflectDir = reflect(-lightDir, normal);
     vec3 halfwayDir = normalize(lightDir + viewDir);  
     float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
 
-    vec3 specular = vec3(0.2) * spec;
+    vec3 specular = vec3(0.2) * spec * lightColor;
     vec4 result = vec4(ambient + diffuse + specular, 1.0);
     
     vec4 gammaCorrected = pow(result, vec4(1.0 / gamma));

@@ -115,7 +115,7 @@ void main()
         vec3 H = normalize(V + L);
         float distance = length(lightPositions[i] - WorldPos);
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = lightColors[i] * attenuation;
+        vec3 radiance = lightColors[i] * 255.0 * attenuation; // 255 to fix imgui only permiting 0 - 1 of rgb
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);   

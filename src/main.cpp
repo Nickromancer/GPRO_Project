@@ -49,6 +49,9 @@ glm::vec3 position = glm::vec3(0, 0.55, 0);
 // gamma
 float gamma = 1.f;
 
+// gui combo
+static const char* current_item = "envCubemap";
+
 
 int main()
 {
@@ -103,9 +106,11 @@ int main()
 
     // build and compile shaders
     Shader pbrShader("../src/pbr.vs", "../src/pbr.fs");
+
     Shader equirectangularToCubemapShader("../src/cubemap.vs", "../src/equirectangular_to_cubemap.fs");
     Shader irradianceShader("../src/cubemap.vs", "../src/irradiance_convolution.fs");
     Shader prefilterShader("../src/cubemap.vs", "../src/prefilter.fs");
+
     Shader brdfShader("../src/brdf.vs", "../src/brdf.fs");
     Shader backgroundShader("../src/background.vs", "../src/background.fs");
     Shader parallaxShader("../src/parallax_mapping.vs", "../src/parallax_mapping.fs");
@@ -154,7 +159,7 @@ int main()
         glm::vec3(0.0f,  2.0f, 0.f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(300.0f, 300.0f, 300.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
     };
 
     // setup framebuffer
@@ -425,7 +430,7 @@ int main()
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         chestModel.Draw(pbrShader);
 
-        // Cup
+        // Cup / lights
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, cupAlbedoMap);
         glActiveTexture(GL_TEXTURE4);
@@ -458,6 +463,7 @@ int main()
         parallaxShader.setMat4("projection", projection);
         parallaxShader.setMat4("view", view);
         parallaxShader.setFloat("gamma", gamma);
+        parallaxShader.setVec3("lightColor", lightColors[0]);
 
         // render parallax-mapped quad
         glm::mat4 parallaxModel = glm::mat4(1.0f);
@@ -479,16 +485,17 @@ int main()
 
         // render skybox
         backgroundShader.use();
-
         backgroundShader.setFloat("gamma", gamma);
-
         backgroundShader.setMat4("view", view);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
-        //glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
-        renderCube();
 
+        if (strcmp(current_item,"envCubemap") == 0)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+        if (strcmp(current_item, "irradianceMap") == 0)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
+        if (strcmp(current_item, "prefilterMap") == 0)
+            glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+        renderCube();
 
 
         ImGui::Begin("GUI Window");
@@ -496,6 +503,8 @@ int main()
         ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
         ImGui::Text("Gamma");
         ImGui::SliderFloat("Gamma Value", &gamma, 0, 10);
+        ImGui::Text("Light Color");
+        ImGui::ColorEdit3("Color", &lightColors[0].x);
         ImGui::Text("Light Position");
         ImGui::SliderFloat("X Light", &lightPositions[0].x, -100, 100);
         ImGui::SliderFloat("Y Light", &lightPositions[0].y, -100, 100);
@@ -504,9 +513,31 @@ int main()
         ImGui::SliderFloat("X Chest", &position.x, -100, 100);
         ImGui::SliderFloat("Y Chest", &position.y, -100, 100);
         ImGui::SliderFloat("Z Chest", &position.z, -100, 100);
+        ImGui::Text("Maps");
+
+        char* items[] = { "envCubemap", "irradianceMap", "prefilterMap" };
+        //current_item = NULL;
+
+        if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            {
+                bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(items[n], is_selected))
+                {
+                    current_item = items[n];
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+            }
+            ImGui::EndCombo();
+        }
+
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        //cout << current_item;
+
 
         // swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         glfwSwapBuffers(window);
