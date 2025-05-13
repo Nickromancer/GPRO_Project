@@ -41,6 +41,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+// parallax height
 float heightScale = 0.03f;
 
 // chest position
@@ -49,8 +50,9 @@ glm::vec3 position = glm::vec3(0, 0.55, 0);
 // gamma
 float gamma = 1.f;
 
-// gui combo
-static const char* current_item = "envCubemap";
+// gui combo item
+static const char* current_itemMap = "envCubemap";
+static const char* current_itemParallax = "concrete";
 
 
 int main()
@@ -105,15 +107,15 @@ int main()
     ImGui_ImplOpenGL3_Init("#version 330");
 
     // build and compile shaders
-    Shader pbrShader("../src/pbr.vs", "../src/pbr.fs");
+    Shader pbrShader("../src/pbr.vert", "../src/pbr.frag");
 
-    Shader equirectangularToCubemapShader("../src/cubemap.vs", "../src/equirectangular_to_cubemap.fs");
-    Shader irradianceShader("../src/cubemap.vs", "../src/irradiance_convolution.fs");
-    Shader prefilterShader("../src/cubemap.vs", "../src/prefilter.fs");
+    Shader equirectangularToCubemapShader("../src/cubemap.vert", "../src/equirectangular_to_cubemap.frag");
+    Shader irradianceShader("../src/cubemap.vert", "../src/irradiance_convolution.frag");
+    Shader prefilterShader("../src/cubemap.vert", "../src/prefilter.frag");
 
-    Shader brdfShader("../src/brdf.vs", "../src/brdf.fs");
-    Shader backgroundShader("../src/background.vs", "../src/background.fs");
-    Shader parallaxShader("../src/parallax_mapping.vs", "../src/parallax_mapping.fs");
+    Shader brdfShader("../src/brdf.vert", "../src/brdf.frag");
+    Shader backgroundShader("../src/background.vert", "../src/background.frag");
+    Shader parallaxShader("../src/parallax_mapping.vert", "../src/parallax_mapping.frag");
 
     pbrShader.use();
     pbrShader.setInt("irradianceMap", 0);
@@ -149,10 +151,15 @@ int main()
     unsigned int cupRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/roughness.png").c_str());
     unsigned int cupAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/cup/ao.png").c_str());
 
-    // Parallax
-    unsigned int diffuseMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_diff_4k.png").c_str());
-    unsigned int normalMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_nor_gl_4k.png").c_str());
-    unsigned int heightMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_disp_4k.png").c_str());
+    // Parallax - concrete
+    unsigned int concreteDiffuseMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_diff_4k.png").c_str());
+    unsigned int concreteNormalMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_nor_gl_4k.png").c_str());
+    unsigned int concreteHeightMap = loadTexture(FileSystem::getPath("resources/textures/patterned_concrete_wall_disp_4k.png").c_str());
+
+    // Parallax - sand
+    unsigned int sandDiffuseMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_diff_4k.png").c_str());
+    unsigned int sandNormalMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_nor_gl_4k.png").c_str());
+    unsigned int sandHeightMap = loadTexture(FileSystem::getPath("resources/textures/sand_02_disp_4k.png").c_str());
 
     // lights (Can add more)
     glm::vec3 lightPositions[] = {
@@ -475,12 +482,25 @@ int main()
         parallaxShader.setVec3("lightPos", lightPositions[0]);
         parallaxShader.setFloat("heightScale", heightScale);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, normalMap);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, heightMap);
+        if (strcmp(current_itemParallax, "concrete") == 0)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, concreteDiffuseMap);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, concreteNormalMap);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, concreteHeightMap);
+        }
+
+        if (strcmp(current_itemParallax, "sand") == 0)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, sandDiffuseMap);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, sandNormalMap);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, sandHeightMap);
+        }
         renderQuadParallax();
 
         // render skybox
@@ -489,11 +509,11 @@ int main()
         backgroundShader.setMat4("view", view);
         glActiveTexture(GL_TEXTURE0);
 
-        if (strcmp(current_item,"envCubemap") == 0)
+        if (strcmp(current_itemMap,"envCubemap") == 0)
             glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
-        if (strcmp(current_item, "irradianceMap") == 0)
+        if (strcmp(current_itemMap, "irradianceMap") == 0)
             glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
-        if (strcmp(current_item, "prefilterMap") == 0)
+        if (strcmp(current_itemMap, "prefilterMap") == 0)
             glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
         renderCube();
 
@@ -501,6 +521,22 @@ int main()
         ImGui::Begin("GUI Window");
         ImGui::Text("Parallax");
         ImGui::SliderFloat("Parallax Height", &heightScale, 0, 1);
+        char* itemsParallax[] = { "concrete", "sand" };
+
+        if (ImGui::BeginCombo("##combo1", current_itemParallax)) // The second parameter is the label previewed before opening the combo.
+        {
+            for (int n = 0; n < IM_ARRAYSIZE(itemsParallax); n++)
+            {
+                bool is_selected = (current_itemParallax == itemsParallax[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(itemsParallax[n], is_selected))
+                {
+                    current_itemParallax = itemsParallax[n];
+                    if (is_selected)
+                        ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
+                }
+            }
+            ImGui::EndCombo();
+        }
         ImGui::Text("Gamma");
         ImGui::SliderFloat("Gamma Value", &gamma, 0, 10);
         ImGui::Text("Light Color");
@@ -515,17 +551,16 @@ int main()
         ImGui::SliderFloat("Z Chest", &position.z, -25, 25);
         ImGui::Text("Maps");
 
-        char* items[] = { "envCubemap", "irradianceMap", "prefilterMap" };
-        //current_item = NULL;
+        char* itemsMaps[] = { "envCubemap", "irradianceMap", "prefilterMap" };
 
-        if (ImGui::BeginCombo("##combo", current_item)) // The second parameter is the label previewed before opening the combo.
+        if (ImGui::BeginCombo("##combo2", current_itemMap)) // The second parameter is the label previewed before opening the combo.
         {
-            for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+            for (int n = 0; n < IM_ARRAYSIZE(itemsMaps); n++)
             {
-                bool is_selected = (current_item == items[n]); // You can store your selection however you want, outside or inside your objects
-                if (ImGui::Selectable(items[n], is_selected))
+                bool is_selected = (current_itemMap == itemsMaps[n]); // You can store your selection however you want, outside or inside your objects
+                if (ImGui::Selectable(itemsMaps[n], is_selected))
                 {
-                    current_item = items[n];
+                    current_itemMap = itemsMaps[n];
                     if (is_selected)
                         ImGui::SetItemDefaultFocus();   // You may set the initial focus when opening the combo (scrolling + for keyboard navigation support)
                 }
@@ -536,7 +571,6 @@ int main()
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        //cout << current_item;
 
 
         // swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
